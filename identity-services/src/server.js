@@ -20,7 +20,7 @@ mongoose
     logger.info("Connected to MongoDB");
   })
   .catch((error) => {
-    logger.error("Error connecting to MongoDB", error.message);
+    logger.error(`Error connecting to MongoDB: ${error.message}`);
   });
 
 //redis client for rate limiting
@@ -88,5 +88,5 @@ logger.info(`Identity Service running on port ${PORT}`);
 })
 
 process.on('unhandledRejection',(reason,promise)=>{
-    logger.error('Unhandled Rejection at:',promise,'reason:',reason);
+    logger.error(`Unhandled Rejection at: ${promise}, reason: ${reason}`);
 })

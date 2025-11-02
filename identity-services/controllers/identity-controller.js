@@ -11,7 +11,7 @@ const registerUser = async (req, res) => {
     //validate schema
     const { error } = validateRegistration(req.body);
     if (error) {
-      logger.warn("Validation error", error.details[0].message);
+      logger.warn(`Validation error: ${error.details[0].message}`);
       return res.status(400).json({
         success: false,
         message: error.details[0].message,
@@ -21,14 +21,14 @@ const registerUser = async (req, res) => {
     logger.info("Body:", req.body);
     let user = await User.findOne({ $or: [{ email }, { username }] });
     if (user) {
-      logger.warn("User already exists", error.details[0].message);
+      logger.warn(`User already exists: ${email} or ${username}`);
       return res.status(400).json({
         success: false,
         message: "User with given email or username already exists",
       });
     }
     user = await User.create({ username, email, password });
-    logger.info("User registered successfully", user._id);
+    logger.info(`User registered successfully: ${user._id}`);
     const { accessToken, refreshToken } = await generateToken(user);
     res.status(201).json({
       success: true,
@@ -39,7 +39,7 @@ const registerUser = async (req, res) => {
       },
     });
   } catch (error) {
-    logger.error("Error in user registration", error.message);
+    logger.error(`Error in user registration: ${error.message}`);
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -53,7 +53,7 @@ const loginUser = async (req,res)=>{
   try{
     const {error} = validatelogin(req.body);
     if(error){
-      logger.warn("Validation error", error.details[0].message);
+      logger.warn(`Validation error: ${error.details[0].message}`);
       return res.status(400).json({
         success: false,
         message: error.details[0].message,
@@ -61,18 +61,18 @@ const loginUser = async (req,res)=>{
     }
     const {email, password} = req.body;
     let user = await User.findOne({email});
-    logger.info("User found", user._id);
     if(!user){
-      logger.warn("User not found", email);
+      logger.warn(`User not found: ${email}`);
       return res.status(400).json({
         success: false,
         message: "Invalid email or password",
       });
     }
+    logger.info(`User found: ${user._id}`);
     //user valid password or not
     const isValidPssword = await user.comparePassword(password);
     if(!isValidPssword){
-      logger.warn("Invalid password attempt", email);
+      logger.warn(`Invalid password attempt for: ${email}`);
       return res.status(400).json({
         success: false,
         message: "Invalid email or password",
@@ -89,7 +89,7 @@ const loginUser = async (req,res)=>{
       },
     });
    }catch(e){
-    logger.error("Error in user login", e.message);
+    logger.error(`Error in user login: ${e.message}`);
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -138,7 +138,7 @@ const refreshTokenController = async (req,res)=>{
     });
 
    }catch(error){
-  logger.error("Error in refreshing token", error.message);
+  logger.error(`Error in refreshing token: ${error.message}`);
   res.status(500).json({
     success: false,
     message: "Internal Server Error",
@@ -157,7 +157,7 @@ const logoutUser = async (req,res)=>{
         message: "Refresh token is required",
       });
     }
-    logger.info("Deleting refresh token", refreshToken);
+    logger.info(`Deleting refresh token: ${refreshToken}`);
     await RefreshToken.deleteOne({token:refreshToken});
     logger.info("User logged out successfully");
     res.status(200).json({
@@ -165,7 +165,7 @@ const logoutUser = async (req,res)=>{
       message: "User logged out successfully",
     });
   }catch(error){
-    logger.error("Error in user logout", error.message);
+    logger.error(`Error in user logout: ${error.message}`);
     res.status(500).json({
       success: false,
       message: "Internal Server Error",

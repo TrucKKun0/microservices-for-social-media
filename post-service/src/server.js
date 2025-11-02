@@ -19,7 +19,7 @@ mongoose.connect(MONGODB_URI).then(() => {
     logger.error('Error connecting to MongoDB:', err);
 });
 const redisClient = new Redis(REDIS_URL);
-app.use(helmet)
+app.use(helmet())
 app.use(cors)
 app.use(express.json());
 
