@@ -8,5 +8,6 @@ const {authenticatedRequest} = require('../middlewares/authMiddleware');
 router.use(authenticatedRequest);
 
 router.post('/create-post', createPost);
+router.get('/all-posts', getAllPosts);
 
 module.exports = router;

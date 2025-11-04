@@ -3,6 +3,14 @@ const Post = require('../models/Post');
 const logger = require('../utils/logger');
 const {validateCreatePost} = require('../utils/validation');
 
+async function invalidatePostCache(req,input){
+    const keys = await req.redisClient.keys('posts:*');
+    if(keys.length > 0){
+        await req.redisClient.del(keys);
+    }
+}
+
+
 const createPost = async (req, res) => {
     logger.info('Creating a new post end point hit');
     try{
@@ -21,6 +29,7 @@ const createPost = async (req, res) => {
             media: mediaIds || []
         });
         await  newlyCreatedPost.save();
+        await invalidatePostCache(req,newlyCreatedPost._id.toString());
         logger.info(`Post created successfully with id: ${newlyCreatedPost._id}`);
         res.status(201).json({
             success: true,
@@ -37,9 +46,39 @@ const createPost = async (req, res) => {
     }
 
 }
-const getAllPosts = (req, res) => {
+const getAllPosts = async (req, res) => {
     logger.info('Fetching all posts');
     try{
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const startIndex = (page - 1) * limit;
+        const cacheKey = `posts:${page}:${limit}`;
+        const cachedPosts = await req.redisClient.get(cacheKey);
+        if(cachedPosts){
+            logger.info('Serving posts from cache');
+            return res.status(200).json({
+                success: true,
+                data: JSON.parse(cachedPosts),
+                message: 'Posts fetched successfully from cache',
+            });
+        }
+        const posts = await Post.find().sort({createdAt:-1}).skip(startIndex).limit(limit);
+        const totalPosts = await Post.countDocuments();
+        const result = {
+            posts,
+            currentPage: page,
+        totalPages : Math.ceil(totalPosts / limit),
+        totalPosts: totalPosts
+    };
+    //save to redis cache
+    await req.redisClient.setex(cacheKey,300,JSON.stringify(result)); //cache for 5 minutes
+    logger.info('Posts fetched successfully');
+    res.status(200).json({
+        success: true,
+        data: result,
+        message: 'Posts fetched successfully',
+    });
+
 
     }catch(error){
         logger.error(`Error fetching posts: ${error.message}`);
