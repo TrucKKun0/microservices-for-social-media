@@ -20,7 +20,7 @@ mongoose.connect(MONGODB_URI).then(() => {
 });
 const redisClient = new Redis(REDIS_URL);
 app.use(helmet())
-app.use(cors)
+app.use(cors())
 app.use(express.json());
 
 app.use((req,res,next)=>{
@@ -40,5 +40,5 @@ app.listen(PORT, () => {
 });
 //unhandled promise rejection
 process.on('unhandledRejection', (reason, promise) => {
-    logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    logger.error(`Unhandled Rejection at: ${promise}, reason: ${reason}`);
 });

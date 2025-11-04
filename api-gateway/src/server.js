@@ -75,13 +75,13 @@ app.use('/v1/posts',validateToken,proxy(process.env.POST_SERVICE_URL, {
     ...proxyOptions,
     proxyReqOptDecorator:(proxyReqOpts, srcReq) => {
         proxyReqOpts.headers["Content-Type"] = "application/json"
-        proxyReqOpts.headers['x-user-id'] = srcReq.user.id; //forward user id to post service
+        proxyReqOpts.headers['x-user-id'] = srcReq.user.userId; //forward user id to post service
         return proxyReqOpts;
     },
     userResDecorator: (proxyRes,proxyResData, userReq, userRes) => {
         logger.info(`Response from post service for ${userReq.method} ${userReq.url}: ${proxyRes.statusCode}`);
         return proxyResData;
-    }    
+    }
 }))
 
 app.use(errorHandler);
