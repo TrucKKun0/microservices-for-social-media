@@ -9,5 +9,6 @@ router.use(authenticatedRequest);
 
 router.post('/create-post', createPost);
 router.get('/all-posts', getAllPosts);
+router.get('/:id', getPost);
 
 module.exports = router;

@@ -89,10 +89,28 @@ const getAllPosts = async (req, res) => {
     }
 
 }
-const getPost = (req, res) => {
+const getPost = async (req, res) => {
     logger.info(`Fetching post with id: ${req.params.id}`);
     try{
-
+        const postId = req.params.id;
+        const cacheKey = `post:${postId}`;
+        const cachedPost = await req.redisClient.get(cacheKey);
+        if(cachedPost){
+            return res.status(200).json(JSON.parse(cachedPost));
+        }
+        const singlePost = await Post.findById(postId);
+        if(!singlePost){
+            return res.status(404).json({
+                success: false,
+                message: 'Post not found',
+            });
+        }
+        await req.redisClient.setex(cacheKey,300,JSON.stringify(singlePost));
+        res.status(200).json({
+            success: true,
+            data: singlePost,
+            message: 'Post fetched successfully',
+        });
     }catch(error){
         logger.error(`Error fetching post: ${error.message}`);
         res.status(500).json({
