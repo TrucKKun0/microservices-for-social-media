@@ -10,5 +10,6 @@ router.use(authenticatedRequest);
 router.post('/create-post', createPost);
 router.get('/all-posts', getAllPosts);
 router.get('/:id', getPost);
+router.post('/delete-post/:id',deletePost)
 
 module.exports = router;
