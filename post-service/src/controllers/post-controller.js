@@ -1,7 +1,6 @@
-constlogger = require('../utils/logger');
 const Post = require('../models/Post');
 const logger = require('../utils/logger');
-const {validateCreatePost} = require('../utils/validation');
+const {validateCreatePost} = require('../../../media-service/src/utils/validation');
 
 async function invalidatePostCache(req,input){
     const cacheKey = `post:${input}`;
