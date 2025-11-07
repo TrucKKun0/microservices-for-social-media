@@ -12,4 +12,4 @@ const validateCreateMedia = (data)=>{
 }
 
 
-module.exports = {validateCreatePost};
+module.exports = {validateCreateMedia};

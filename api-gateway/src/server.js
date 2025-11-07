@@ -42,6 +42,7 @@ const ratelimit =  rateLimit({
         sendCommand : (...args) => redisClient.call(...args)
     })
 })
+console.log(process.env.MEDIA_SERVICE_URL);
 
 app.use(ratelimit);
 
@@ -83,6 +84,30 @@ app.use('/v1/posts',validateToken,proxy(process.env.POST_SERVICE_URL, {
         return proxyResData;
     }
 }))
+// setting up proxy for our media service
+app.use('/v1/media', validateToken, proxy(process.env.MEDIA_SERVICE_URL, {
+    ...proxyOptions,
+    proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+        proxyReqOpts.headers['x-user-id'] = srcReq.user.userId; // forward user id
+
+        const contentType = proxyReqOpts.headers["content-type"] 
+            || proxyReqOpts.headers["Content-Type"];
+
+        if (!contentType || !contentType.startsWith("multipart/form-data")) {
+            proxyReqOpts.headers["Content-Type"] = "application/json";
+        }
+
+        return proxyReqOpts;
+    },
+    userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
+        logger.info(
+            `Response from media service for ${userReq.method} ${userReq.url}: ${proxyRes.statusCode}`
+        );
+        return proxyResData;
+    },
+    parseReqBody: false
+}));
+
 
 app.use(errorHandler);
 console.log(`Identity Service URL: ${process.env.IDENTITY_SERVICE_URL}`);
@@ -94,4 +119,5 @@ app.listen(PORT, () => {
     logger.info(`Identity Service URL: ${process.env.IDENTITY_SERVICE_URL}`);
     logger.info(`Post Service URL: ${process.env.POST_SERVICE_URL}`);
     logger.info(`Redis URL: ${process.env.REDIS_URL}`);
+    logger.info(`Media Service URL: ${process.env.MEDIA_SERVICE_URL}`);
 });
