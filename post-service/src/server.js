@@ -6,6 +6,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const postRoutes = require('./routes/post-route');
 const logger = require('./utils/logger');
+const { connectRabbitMQ } = require('./utils/rabbitmq');
 const errorHandler = require('./middlewares/errorHandlers');
 
 const app = express();
@@ -35,9 +36,21 @@ app.use('/api/posts',(req,res,next)=>{
     next();
 },postRoutes);
 app.use(errorHandler);
-app.listen(PORT, () => {
-    logger.info(`Post Service is running on port ${PORT}`);
-});
+
+async function startServer() {
+    try{
+        await connectRabbitMQ();
+        app.listen(PORT, () => {
+            logger.info(`Post Service is running on port ${PORT}`);
+        });
+    
+    }catch (error) {
+        logger.error('Failed to connect to RabbitMQ server:', error);
+        process.exit(1);
+    }
+}
+startServer()
+
 //unhandled promise rejection
 process.on('unhandledRejection', (reason, promise) => {
     logger.error(`Unhandled Rejection at: ${promise}, reason: ${reason}`);
