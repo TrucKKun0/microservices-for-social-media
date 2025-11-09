@@ -8,8 +8,9 @@ const ioredis = require('ioredis');
 const errorHandler = require('./middlewares/errorHandlers');
 const mediaRoutes = require('./routes/media-route');
 const PORT = process.env.PORT || 3003;
-
-
+const { connectRabbitMQ } = require('./utils/rabbitmq');
+const{handlePostDeleted} = require('./eventHandlers/media-event-handlers');
+const { consumeEvent } = require('./utils/rabbitmq');
 
 const app = express();
 app.use(helmet())
@@ -32,9 +33,24 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
 }); 
 const redisClient = new ioredis(process.env.REDIS_URL);
 
-app.listen(PORT, () => {
-    logger.info(`Media Service is running on port ${PORT}`);
-});
+async function startServer(){
+    try{
+        await connectRabbitMQ();
+
+        //consume events 
+
+        await consumeEvent('post.deleted', handlePostDeleted);
+
+
+        app.listen(PORT, () => {
+            logger.info(`Media Service is running on port ${PORT}`);
+        });
+    }catch(err){
+        logger.error('Failed to connect to RabbitMQ', err);
+    }
+}
+
+startServer();
 
 //unhandled promise rejection
 process.on('unhandledRejection', (reason, promise) => {

@@ -39,4 +39,17 @@ const uploadMedia = async (req, res) => {
       .json({ success: false, message: "Error uploading media" });
   }
 };
-module.exports = { uploadMedia };
+
+const getAllMedia = async (req, res) => {
+  try{
+    const result = await Media.find({});
+    return res.status(200).json({ success: true, data: result, message: "Media fetched successfully"}); 
+  }catch(error){
+    logger.error("Error fetching media:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Error fetching media" });
+  }
+}
+
+module.exports = { uploadMedia, getAllMedia };
