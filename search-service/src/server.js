@@ -4,12 +4,19 @@ const cors = require('cors');
 const helmet = require('helmet');
 const mongoose = require('mongoose');
 const logger = require('./utils/logger');
-const searchRoutes = require('./routes/search-routes');
 const errorHandler = require('./middlewares/errorHandlers');
 const { connectRabbitMQ, consumeEvent } = require('./utils/rabbitmq');
-const {searchRoutes} = require('./routes/searchRouter');
+const searchRoutes = require('./routes/searchRouter');
+const { handlePostCreated } = require('./eventHandlers/search-event-handlers');
 const app = express();
 const PORT = process.env.PORT || 3004
+//const Redis = require('ioredis');
+
+
+// const redisClient = new Redis(process.env.REDIS_URL);
+
+
+
 
 mongoose.connect(process.env.MONGODB_URI).then(() => {
     logger.info('Connected to MongoDB');
@@ -30,11 +37,12 @@ app.use(errorHandler);
 async function startServer() {
     try{
         await connectRabbitMQ();
+        await consumeEvent('post.created',handlePostCreated);
         app.listen(PORT, () => {
             logger.info(`Search Service running on port ${PORT}`);
         });
     }catch(error){
-        logger.error("Error starting server", error);
+        logger.error("Error starting  search server", error);
     }
 }
 

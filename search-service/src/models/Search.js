@@ -8,9 +8,9 @@ const SearchPostSchema = new mongoose.Schema({
     userId:{
         type:String,
         required:true,
-        unique:true
+        index:true
     },
-    constent:{
+    content:{
         type:String,
         required:true
     },

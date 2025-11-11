@@ -108,10 +108,24 @@ app.use('/v1/media', validateToken, proxy(process.env.MEDIA_SERVICE_URL, {
     parseReqBody: false
 }));
 
+//setting up proxy for search service handler
+
+app.use('/v1/search',validateToken,proxy(process.env.SEARCH_SERVICE_URL, {
+    ...proxyOptions,
+    proxyReqOptDecorator:(proxyReqOpts, srcReq) => {
+        proxyReqOpts.headers["Content-Type"] = "application/json"
+        proxyReqOpts.headers['x-user-id'] = srcReq.user.userId; //forward user id to search service
+        return proxyReqOpts;
+    },
+    userResDecorator: (proxyRes,proxyResData, userReq, userRes) => {
+        logger.info(`Response from Search service for ${userReq.method} ${userReq.url}: ${proxyRes.statusCode}`);
+        return proxyResData;
+    }
+}))
+
 
 app.use(errorHandler);
-console.log(`Identity Service URL: ${process.env.IDENTITY_SERVICE_URL}`);
-console.log(`Redis URL: ${process.env.REDIS_URL}`);
+
 
 
 app.listen(PORT, () => {
@@ -120,4 +134,5 @@ app.listen(PORT, () => {
     logger.info(`Post Service URL: ${process.env.POST_SERVICE_URL}`);
     logger.info(`Redis URL: ${process.env.REDIS_URL}`);
     logger.info(`Media Service URL: ${process.env.MEDIA_SERVICE_URL}`);
+    logger.info(`Search Service URL: ${process.env.SEARCH_SERVICE_URL}`);
 });
