@@ -21,7 +21,19 @@ logger.info("Search post created successfully", {postId});
     }
 
 }
+async function handlePostDeleted(event){
+    logger.info("Handling post.deleted event", {event});
+    try{
+        const { postId } = event;
+        await Search.findOneAndDelete({ postId });
+        logger.info("Search post deleted successfully", {postId});
+        
+    }catch(error){
+        logger.error("Error handling post.deleted event", {error});
+    }   
+}
 
 module.exports = {
     handlePostCreated,
+    handlePostDeleted
 };
