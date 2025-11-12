@@ -1,9 +1,6 @@
 const Search = require("../models/Search");
 const logger = require("../utils/logger");
 
-
-
-
 async function handlePostCreated(event){
     logger.info("Handling post.created event", {event});
     try{

@@ -7,13 +7,15 @@ const logger = require('./utils/logger');
 const errorHandler = require('./middlewares/errorHandlers');
 const { connectRabbitMQ, consumeEvent } = require('./utils/rabbitmq');
 const searchRoutes = require('./routes/searchRouter');
-const { handlePostCreated } = require('./eventHandlers/search-event-handlers');
+const { handlePostCreated, handlePostDeleted } = require('./eventHandlers/search-event-handlers');
 const app = express();
 const PORT = process.env.PORT || 3004
-//const Redis = require('ioredis');
+const REDIS_URL = process.env.REDIS_URL
+
+const Redis = require('ioredis');
 
 
-// const redisClient = new Redis(process.env.REDIS_URL);
+const redisClient = new Redis(REDIS_URL);
 
 
 
@@ -31,7 +33,10 @@ app.use((req, res, next) => {
     logger.info(`${req.method} ${req.url}`);
     next();
 });
-app.use('/api/search', searchRoutes);
+app.use('/api/search', (req,res,next)=>{
+    req.redisClient = redisClient;
+    next();
+},searchRoutes);
 app.use(errorHandler);
 
 async function startServer() {

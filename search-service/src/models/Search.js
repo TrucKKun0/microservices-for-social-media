@@ -22,7 +22,7 @@ const SearchPostSchema = new mongoose.Schema({
     timestamps:true
 });
 
-SearchPostSchema.index({ constent: 'text' });
+SearchPostSchema.index({ content: 'text' });
 SearchPostSchema.index({ postId: -1 });
 
 const Search = mongoose.model('Search', SearchPostSchema);
